@@ -76,7 +76,7 @@ export const gerarPlanoSemanal = inngest.createFunction(
         where: { userId_turmaId_semana: { userId, turmaId, semana } },
         update: {
           versao: { increment: 1 },
-          blocos: { deleteMany: {} },
+          blocos: { deleteMany: { editadoPorMentor: false } },
           geradoPorIA: true,
           promptUsado: null,
         },

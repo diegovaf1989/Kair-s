@@ -27,6 +27,8 @@ model User {
   planos       Plano[]
   execucoes    Execucao[]
   checkIns     CheckIn[]
+  mensagensEnviadas   Mensagem[] @relation("MensagensEnviadas")
+  mensagensRecebidas  Mensagem[] @relation("MensagensRecebidas")
 
   @@index([clerkId])
   @@index([email])
@@ -135,8 +137,9 @@ model Bloco {
   topico     String
   tipo       BlocoTipo
   duracaoMin Int
-  prioridade Int       @default(0)
-  observacao String?
+  prioridade       Int       @default(0)
+  observacao       String?
+  editadoPorMentor Boolean   @default(false)
 
   execucoes Execucao[]
 
@@ -174,4 +177,18 @@ model Execucao {
 
   @@index([userId, data])
   @@index([blocoId])
+}
+
+model Mensagem {
+  id             String   @id @default(cuid())
+  remetenteId    String
+  remetente      User     @relation("MensagensEnviadas", fields: [remetenteId], references: [id])
+  destinatarioId String
+  destinatario   User     @relation("MensagensRecebidas", fields: [destinatarioId], references: [id])
+  conteudo       String   @db.Text
+  lida           Boolean  @default(false)
+  criadoEm      DateTime @default(now())
+
+  @@index([destinatarioId, lida])
+  @@index([remetenteId])
 }

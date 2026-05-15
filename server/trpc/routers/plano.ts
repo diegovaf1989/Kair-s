@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { createTRPCRouter, protectedProcedure } from "@/server/trpc/trpc";
+import { createTRPCRouter, protectedProcedure, mentorProcedure } from "@/server/trpc/trpc";
 import { inngest } from "@/lib/inngest/client";
 
 const REGENERAR_LIMITE = 2;
@@ -75,5 +75,24 @@ export const planoRouter = createTRPCRouter({
       });
 
       return { ok: true };
+    }),
+
+  ajustarManual: mentorProcedure
+    .input(
+      z.object({
+        blocoId: z.string().cuid(),
+        materia: z.string().min(1).optional(),
+        topico: z.string().optional(),
+        duracaoMin: z.number().int().min(15).max(240).optional(),
+        observacao: z.string().optional(),
+        prioridade: z.number().int().min(0).max(10).optional(),
+      })
+    )
+    .mutation(({ ctx, input }) => {
+      const { blocoId, ...data } = input;
+      return ctx.db.bloco.update({
+        where: { id: blocoId },
+        data: { ...data, editadoPorMentor: true },
+      });
     }),
 });

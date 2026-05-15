@@ -106,7 +106,7 @@ export const replanejarSemana = inngest.createFunction(
 
           await db.plano.upsert({
             where: { userId_turmaId_semana: { userId, turmaId, semana } },
-            update: { versao: { increment: 1 }, blocos: { deleteMany: {} } },
+            update: { versao: { increment: 1 }, blocos: { deleteMany: { editadoPorMentor: false } } },
             create: { userId, turmaId, semana, inicioSemana, fimSemana, geradoPorIA: true },
           });
 
