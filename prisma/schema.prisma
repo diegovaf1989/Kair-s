@@ -22,7 +22,9 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  matriculas Matricula[]
+  matriculas   Matricula[]
+  diagnosticos Diagnostico[]
+  planos       Plano[]
 
   @@index([clerkId])
   @@index([email])
@@ -57,6 +59,7 @@ model Turma {
   status        TurmaStatus @default(RASCUNHO)
 
   matriculas Matricula[]
+  planos     Plano[]
 
   @@index([status, cicloInicio])
 }
@@ -81,4 +84,57 @@ model Matricula {
 
   @@unique([userId, turmaId])
   @@index([status])
+}
+
+enum BlocoTipo {
+  ESTUDO_NOVO
+  REVISAO
+  QUESTOES
+  SIMULADO
+  DESCANSO
+}
+
+model Diagnostico {
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id])
+  respostas Json
+  resumoIA  String?  @db.Text
+  criadoEm DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Plano {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  turmaId      String
+  turma        Turma    @relation(fields: [turmaId], references: [id])
+  semana       Int
+  inicioSemana DateTime
+  fimSemana    DateTime
+  blocos       Bloco[]
+  geradoPorIA  Boolean  @default(true)
+  versao       Int      @default(1)
+  promptUsado  String?  @db.Text
+  criadoEm    DateTime @default(now())
+
+  @@unique([userId, turmaId, semana])
+  @@index([userId, inicioSemana])
+}
+
+model Bloco {
+  id         String    @id @default(cuid())
+  planoId    String
+  plano      Plano     @relation(fields: [planoId], references: [id], onDelete: Cascade)
+  data       DateTime
+  materia    String
+  topico     String
+  tipo       BlocoTipo
+  duracaoMin Int
+  prioridade Int       @default(0)
+  observacao String?
+
+  @@index([planoId, data])
 }
