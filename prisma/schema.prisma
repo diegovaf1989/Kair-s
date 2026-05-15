@@ -1,0 +1,194 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ALUNO
+  MENTOR
+  ADMIN
+}
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String   @unique
+  nome      String
+  whatsapp  String?
+  role      Role     @default(ALUNO)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  matriculas   Matricula[]
+  diagnosticos Diagnostico[]
+  planos       Plano[]
+  execucoes    Execucao[]
+  checkIns     CheckIn[]
+  mensagensEnviadas   Mensagem[] @relation("MensagensEnviadas")
+  mensagensRecebidas  Mensagem[] @relation("MensagensRecebidas")
+
+  @@index([clerkId])
+  @@index([email])
+}
+
+model Carreira {
+  id     String  @id @default(cuid())
+  nome   String
+  slug   String  @unique
+  edital Json?
+  ativa  Boolean @default(true)
+
+  turmas Turma[]
+}
+
+enum TurmaStatus {
+  RASCUNHO
+  ABERTA
+  EM_ANDAMENTO
+  ENCERRADA
+}
+
+model Turma {
+  id            String      @id @default(cuid())
+  nome          String
+  carreiraId    String
+  carreira      Carreira    @relation(fields: [carreiraId], references: [id])
+  cicloInicio   DateTime
+  cicloFim      DateTime
+  precoCentavos Int
+  vagas         Int
+  status        TurmaStatus @default(RASCUNHO)
+
+  matriculas Matricula[]
+  planos     Plano[]
+
+  @@index([status, cicloInicio])
+}
+
+enum MatriculaStatus {
+  PENDENTE
+  PAGA
+  CANCELADA
+  REEMBOLSADA
+}
+
+model Matricula {
+  id              String          @id @default(cuid())
+  userId          String
+  user            User            @relation(fields: [userId], references: [id])
+  turmaId         String
+  turma           Turma           @relation(fields: [turmaId], references: [id])
+  stripeSessionId String?         @unique
+  pagaEm          DateTime?
+  status          MatriculaStatus @default(PENDENTE)
+  createdAt       DateTime        @default(now())
+
+  @@unique([userId, turmaId])
+  @@index([status])
+}
+
+enum BlocoTipo {
+  ESTUDO_NOVO
+  REVISAO
+  QUESTOES
+  SIMULADO
+  DESCANSO
+}
+
+model Diagnostico {
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id])
+  respostas Json
+  resumoIA  String?  @db.Text
+  criadoEm DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Plano {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  turmaId      String
+  turma        Turma    @relation(fields: [turmaId], references: [id])
+  semana       Int
+  inicioSemana DateTime
+  fimSemana    DateTime
+  blocos       Bloco[]
+  geradoPorIA  Boolean  @default(true)
+  versao       Int      @default(1)
+  promptUsado  String?  @db.Text
+  criadoEm    DateTime @default(now())
+
+  @@unique([userId, turmaId, semana])
+  @@index([userId, inicioSemana])
+}
+
+model Bloco {
+  id         String    @id @default(cuid())
+  planoId    String
+  plano      Plano     @relation(fields: [planoId], references: [id], onDelete: Cascade)
+  data       DateTime
+  materia    String
+  topico     String
+  tipo       BlocoTipo
+  duracaoMin Int
+  prioridade       Int       @default(0)
+  observacao       String?
+  editadoPorMentor Boolean   @default(false)
+
+  execucoes Execucao[]
+
+  @@index([planoId, data])
+}
+
+model CheckIn {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  semana       Int
+  humor        Int?
+  consistencia Int?
+  criadoEm    DateTime @default(now())
+
+  @@unique([userId, semana])
+  @@index([userId])
+}
+
+model Execucao {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  blocoId         String?
+  bloco           Bloco?   @relation(fields: [blocoId], references: [id])
+  data            DateTime
+  materia         String
+  topico          String?
+  duracaoMin      Int
+  questoesTotal   Int?
+  questoesAcerto  Int?
+  sensacaoDominio Int?
+  observacao      String?  @db.Text
+  criadoEm       DateTime @default(now())
+
+  @@index([userId, data])
+  @@index([blocoId])
+}
+
+model Mensagem {
+  id             String   @id @default(cuid())
+  remetenteId    String
+  remetente      User     @relation("MensagensEnviadas", fields: [remetenteId], references: [id])
+  destinatarioId String
+  destinatario   User     @relation("MensagensRecebidas", fields: [destinatarioId], references: [id])
+  conteudo       String   @db.Text
+  lida           Boolean  @default(false)
+  criadoEm      DateTime @default(now())
+
+  @@index([destinatarioId, lida])
+  @@index([remetenteId])
+}

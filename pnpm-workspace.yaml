@@ -1,3 +1,11 @@
+allowBuilds:
+  '@clerk/shared': true
+  '@prisma/engines': true
+  '@sentry/cli': true
+  core-js: true
+  esbuild: true
+  prisma: true
+  protobufjs: true
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
