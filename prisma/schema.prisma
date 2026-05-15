@@ -25,6 +25,8 @@ model User {
   matriculas   Matricula[]
   diagnosticos Diagnostico[]
   planos       Plano[]
+  execucoes    Execucao[]
+  checkIns     CheckIn[]
 
   @@index([clerkId])
   @@index([email])
@@ -136,5 +138,40 @@ model Bloco {
   prioridade Int       @default(0)
   observacao String?
 
+  execucoes Execucao[]
+
   @@index([planoId, data])
+}
+
+model CheckIn {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  semana       Int
+  humor        Int?
+  consistencia Int?
+  criadoEm    DateTime @default(now())
+
+  @@unique([userId, semana])
+  @@index([userId])
+}
+
+model Execucao {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  blocoId         String?
+  bloco           Bloco?   @relation(fields: [blocoId], references: [id])
+  data            DateTime
+  materia         String
+  topico          String?
+  duracaoMin      Int
+  questoesTotal   Int?
+  questoesAcerto  Int?
+  sensacaoDominio Int?
+  observacao      String?  @db.Text
+  criadoEm       DateTime @default(now())
+
+  @@index([userId, data])
+  @@index([blocoId])
 }
