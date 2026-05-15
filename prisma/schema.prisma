@@ -22,6 +22,63 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  matriculas Matricula[]
+
   @@index([clerkId])
   @@index([email])
+}
+
+model Carreira {
+  id     String  @id @default(cuid())
+  nome   String
+  slug   String  @unique
+  edital Json?
+  ativa  Boolean @default(true)
+
+  turmas Turma[]
+}
+
+enum TurmaStatus {
+  RASCUNHO
+  ABERTA
+  EM_ANDAMENTO
+  ENCERRADA
+}
+
+model Turma {
+  id            String      @id @default(cuid())
+  nome          String
+  carreiraId    String
+  carreira      Carreira    @relation(fields: [carreiraId], references: [id])
+  cicloInicio   DateTime
+  cicloFim      DateTime
+  precoCentavos Int
+  vagas         Int
+  status        TurmaStatus @default(RASCUNHO)
+
+  matriculas Matricula[]
+
+  @@index([status, cicloInicio])
+}
+
+enum MatriculaStatus {
+  PENDENTE
+  PAGA
+  CANCELADA
+  REEMBOLSADA
+}
+
+model Matricula {
+  id              String          @id @default(cuid())
+  userId          String
+  user            User            @relation(fields: [userId], references: [id])
+  turmaId         String
+  turma           Turma           @relation(fields: [turmaId], references: [id])
+  stripeSessionId String?         @unique
+  pagaEm          DateTime?
+  status          MatriculaStatus @default(PENDENTE)
+  createdAt       DateTime        @default(now())
+
+  @@unique([userId, turmaId])
+  @@index([status])
 }

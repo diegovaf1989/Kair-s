@@ -51,4 +51,4 @@ pnpm dev
 - Não commitar `.env.local` nem chaves.
 
 ## Fase atual
-Fase 0 — Setup & Foundations. Veja `blueprint.md` Seção 4 para tarefas e critério de aceite.
+Fase 1 — Auth, Perfis e Estrutura de Turma.
